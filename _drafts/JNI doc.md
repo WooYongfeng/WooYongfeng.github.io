@@ -105,7 +105,7 @@ Second, JDK 1.0's native method interface relied on a conservative garbage colle
 #####JDK 1.0 本地方法接口
 JDK 1.0封装了本地方法接口。但是，该接口不适用于其他Java虚拟机，原因如下：
 
-首先，Java对象中的代码被当做C结构中的成员进行访问。然而，Java语言规范没有规定如何在内存中管理对象。如果一个Java虚拟机以不同的方式将对象进行存储，那么开发者必须重新编译本地方法库。
+首先，Java对象中的代码被当做C结构体中的成员进行访问。然而，Java语言规范没有规定如何在内存中管理对象。如果一个Java虚拟机以不同的方式将对象进行存储，那么开发者必须重新编译本地方法库。
 
 其次，JDK 1.0的本地方法接口依赖于保守型垃圾回收器。例如，无限制的使用unhand 宏，将需要保守地扫描本地栈。
 
@@ -160,15 +160,23 @@ We hoped to adopt one of the existing approaches as the standard interface, beca
 Netscape’s JRI is the closest to what we envision as a portable native method interface, and was used as the starting point of our design. Readers familiar with the JRI will notice the similarities in the API naming convention, the use of method and field IDs, the use of local and global references, and so on. Despite our best efforts, however, the JNI is not binary-compatible with the JRI, although a VM can support both the JRI and the JNI.
 
 ##### JNI使用方法
-我们希望采纳一种现有的方法来作为标准接口，因为这样可以降低
+我们希望采纳一种现有的方法来作为标准接口，因为这样可以给已经熟悉多种虚拟机接口的开发者增加最少的负担。不幸的是，没有一种已有的方法能够完全满足我们的目标。
+
+Netscape提出的JRI是最接近我们所期望的一种可移植的本地方法接口，因此被用来作为我们设计的起点。熟悉JRI的读者将会发现在API命名约定，方法和字段的ID，局部和全局引用等方面的相似之处。虽然我们尽了最大的努力，但是，JNI与JRI不是二进制兼容的，即使一个虚拟机可以同时支持JRI和JNI。
 
 Microsoft’s RNI was an improvement over JDK 1.0 because it solved the problem of native methods working with a nonconservative garbage collector. The RNI, however, was not suitable as a VM-independent native method interface. Like the JDK, RNI native methods access Java objects as C structures, leading to two problems:
 
 -    RNI exposed the layout of internal Java objects to native code.
 -    Direct access of Java objects as C structures makes it impossible to efficiently incorporate “write barriers,” which are necessary in advanced garbage collection algorithms.
 
+Microsoft的RNI在JDK 1.0 基础上提出改进，因为它解决了本地方法使用非保守型垃圾回收器的问题。然而，RNI并不适合作为一种与虚拟机无关的本地方法接口。就像JDK一样，RNI本地方法把Java对象当做C结构体来访问，导致了两个问题：
+
+- RNI 把Java对象的内部结构暴露给了本地代码。
+- 把Java对象当做C结构体直接访问，使得无法与“写入屏障(write barriers)”高效协作，而这一点对高级垃圾回收算法是至关重要的。
+
 As a binary standard, COM ensures complete binary compatibility across different VMs. Invoking a COM method requires only an indirect call, which carries little overhead. In addition, COM objects are a great improvement over dynamic-link libraries in solving versioning problems.
 
+作为一个标准，COM保证在所有的虚拟机上完全二进制兼容。调用一个COM方法只需要一个间接调用，这将会带来一点开销。此外，COM对象在动态链接库的版本问题解决上进行了较大幅度的改进。
 The use of COM as the standard Java native method interface, however, is hampered by a few factors:
 
 -    First, the Java/COM interface lacks certain desired functions, such as accessing private fields and raising general exceptions.
@@ -176,9 +184,20 @@ The use of COM as the standard Java native method interface, however, is hampere
 -    Third, instead of dealing with individual low-level functions, COM is designed to allow software components (including full-fledged applications) to work together. We believe that it is not appropriate to treat all Java classes or low-level native methods as software components.
 -    Fourth, the immediate adoption of COM is hampered by the lack of its support on UNIX platforms.
 
+但是，COM作为一个标准的Java本地方法接口而言，被以下几个问题所阻碍：
+
+- 首先，Java/COM接口缺少必须的方法，例如访问私有字段以及抛出通用异常。
+- 其次，Java/COM接口自动为Java对象提供了标准的IUnknown和IDispatch COM接口，所以本地方法可以访问public的方法和字段。不幸的是，IDispatch接口不能够处理Java方法重载的问题，而且它在方法名称匹配时对大小写不敏感。此外，所有通过IDispatch接口暴露的Java方法，被打包执行动态类型检查和强制转换。因为IDispatch接口融合了弱类型语言（如 Basic）的思想。
+- 再次，COM的设计是用来解决软件模块级别（包括成熟的软件）间协作的问题，而非处理个别低级的方法。我们认为将所有的Java类或者低级的本地方法当做软件模块来对待是不合理的。
+- 最后，由于COM不支持UNIX平台，所以阻碍了它被立即采用。
+
 Although Java objects are not exposed to the native code as COM objects, the JNI interface itself is binary-compatible with COM. JNI uses the same jump table structure and calling convention that COM does. This means that, as soon as cross-platform support for COM is available, the JNI can become a COM interface to the Java VM.
 
+尽管Java对象并没有作为COM对象暴露给本地代码，JNI本身与COM是二进制兼容的。JNI采用了和COM相同的跳表结构和调用约定。这意味着，如果支持跨平台的COM，JNI能够成为Java虚拟机的COM接口。
+
 JNI is not believed to be the only native method interface supported by a given Java VM. A standard interface benefits programmers, who would like to load their native code libraries into different Java VMs. In some cases, the programmer may have to use a lower-level, VM-specific interface to achieve top efficiency. In other cases, the programmer might use a higher-level interface to build software components. Indeed, as the Java environment and component software technologies become more mature, native methods will gradually lose their significance.
+
+JNI并不是Java虚拟机所支持的唯一本地方法接口。那些喜欢将本地代码库加载到不同的Java虚拟机的开发者，将从标准接口获益。
 
 ##### Programming to the JNI
 
