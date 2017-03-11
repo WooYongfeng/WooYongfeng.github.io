@@ -185,30 +185,30 @@ Table 2-1 Unicode Character Translation
 
 Both the native methods and the interface APIs follow the standard library-calling convention on a given platform. For example, UNIX systems use the C calling convention, while Win32 systems use __stdcall.
 
+-----
+
 #####Native Method Arguments
 
 The JNI interface pointer is the first argument to native methods. The JNI interface pointer is of type JNIEnv. The second argument differs depending on whether the native method is static or nonstatic. The second argument to a nonstatic native method is a reference to the object. The second argument to a static native method is a reference to its Java class.
 
 The remaining arguments correspond to regular Java method arguments. The native method call passes its result back to the calling routine via the return value. Chapter 3 describes the mapping between Java and C types.
 
-Code Example 2-1 illustrates using a C function to implement the native method f. The native method f is declared as follows:
+The following code example illustrates using a C function to implement the native method ```f ```. The native method ```f ```is declared as follows:
 
+```
+package pkg; 
 
-package pkg;  
+class Cls {
+    native double f(int i, String s);
+    // ...
+}
+```
 
-class Cls { 
-
-     native double f(int i, String s); 
-
-     ... 
-
-} 
-
-The C function with the long mangled name Java_pkg_Cls_f_ILjava_lang_String_2 implements native method f:
+The C function with the long mangled name ```Java_pkg_Cls_f_ILjava_lang_String_2``` implements native method ```f```:
 
  
-Code Example 2-1 Implementing a Native Method Using C
 
+```
 jdouble Java_pkg_Cls_f__ILjava_lang_String_2 (
      JNIEnv *env,        /* interface pointer */
      jobject obj,        /* "this" pointer */
@@ -226,36 +226,30 @@ jdouble Java_pkg_Cls_f__ILjava_lang_String_2 (
 
      return ...
 }
+```
 
-Note that we always manipulate Java objects using the interface pointer env . Using C++, you can write a slightly cleaner version of the code, as shown in Code Example 2-2:
+Note that we always manipulate Java objects using the interface pointer env. Using C++, you can write a slightly cleaner version of the code, as shown in the following code example:
 
- 
-Code Example 2-2 Implementing a Native Method Using C++
+```
+extern "C" /* specify the C calling convention */ 
 
+jdouble Java_pkg_Cls_f__ILjava_lang_String_2 (
 
-extern "C" /* specify the C calling convention */  
+     JNIEnv *env,        /* interface pointer */
+     jobject obj,        /* "this" pointer */
+     jint i,             /* argument #1 */
+     jstring s)          /* argument #2 */
 
-jdouble Java_pkg_Cls_f__ILjava_lang_String_2 ( 
+{
+     const char *str = env->GetStringUTFChars(s, 0);
 
-     JNIEnv *env,        /* interface pointer */ 
+     // ...
 
-     jobject obj,        /* "this" pointer */ 
+     env->ReleaseStringUTFChars(s, str);
 
-     jint i,             /* argument #1 */ 
-
-     jstring s)          /* argument #2 */ 
-
-{ 
-
-     const char *str = env->GetStringUTFChars(s, 0); 
-
-     ... 
-
-     env->ReleaseStringUTFChars(s, str); 
-
-     return ... 
-
-} 
+     // return ...
+}
+```
 
 With C++, the extra level of indirection and the interface pointer argument disappear from the source code. However, the underlying mechanism is exactly the same as with C. In C++, JNI functions are defined as inline member functions that expand to their C counterparts.
 
