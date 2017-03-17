@@ -106,3 +106,12 @@ google:
 skill_software_keywords: [Java, Design Patterns]
 skill_mobile_app_keywords: [Android, Reverse Engineering]
 skill_windows_keywords: [Win32 SDK, DuiLib, WTL, COM, WinDbg]
+
+
+# --------------------------- #
+#      leancloud统计访问量    #
+# --------------------------- #
+leancloud_visitors:
+  enable: true
+  app_id: MkRCj6w7YvyJ1WYvhvXpXN73-gzGzoHsz
+  app_key: XlxTozLh0bc6bD56JE0UuYSV
