@@ -5,8 +5,8 @@ baseurl:
 url: http://www.wuyongfeng.com
 date_format: "ordinal"
 title: 程序员居住的阁楼
-subtitle: "wuyf"
-description: "旧需求不改，新需求不接"
+subtitle: "旧需求不改，新需求不接"
+description: "wuyf blog"
 keywords: wuyongfeng
 favicon: /favicon.ico
 timezone: Asia/WuHan
