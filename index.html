@@ -79,7 +79,7 @@
                     ctx.beginPath();
                     var i = this.tra.length - 30 > 0 ? this.tra.length - 30 : 0;
                     ctx.moveTo(this.tra[i][0], this.tra[i][1]);
-                    for (i; i < this.tra.length-1; i++) {
+                    for (i; i < this.tra.length-2; i++) {
                         ctx.lineTo(this.tra[i][0], this.tra[i][1])
                     }
                     ctx.stroke();
@@ -173,7 +173,8 @@
             starList[i].draw(ctx);
         }
         if (Math.random() > 0.95) {//点燃一颗
-            var fwItem = new FireWork({ "x": random(13, sky_w - 13), "y": random(floor_y - 45, floor_y) }, random(3, 4), random(70, 100), randomColor(), randomColor(), [random(-3, 3), random(18, 22)]);
+        var fw_color = randomColor();
+            var fwItem = new FireWork({ "x": random(13, sky_w - 13), "y": random(floor_y - 45, floor_y) }, random(3, 4), random(70, 100), fw_color, fw_color, [random(-3, 3), random(18, 22)]);
             fwList.push(fwItem);
             console.log('fire!!!!');
         }
