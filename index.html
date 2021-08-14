@@ -6,26 +6,61 @@
     </body>
       <script type="text/javascript">
         var fw_canvas=document.getElementById("fw_canvas");
-        // var ctx=c.getContext("2d");
+        var ctx=fw_canvas.getContext("2d");
         // ctx.font="30px Arial";
         // ctx.fillText("Hello World",10,50);
 
         window.onload = ()=> {
-        //添加窗口尺寸改变响应监听
-        window.resize= ()=>resizeCanvas;
         //页面加载后先设置一下canvas大小
-        resizeCanvas();
+            resizeCanvas();
       };
- 
+        //添加窗口尺寸改变响应监听
+        window.resize= ()=>{
+            resizeCanvas();
+        }
+
       //窗口尺寸改变响应（修改canvas大小）
       function resizeCanvas() {
-        console.log( window.innerHeight);
         fw_canvas.setAttribute("width", window.innerWidth);
         fw_canvas.setAttribute("height", window.innerHeight);
-        // fw_canvas.attr("width", window.innerWidth);
-        // fw_canvas.attr("height", window.innerHeight);
+        fw_canvas.setAttribute("background-color", "cornflowerblue");
       };
+   //绘制星空
+      class Star{
+          constructor(pos,brightNess){
+              this.x = pos.x;
+              this.y = pos.y;
+              this.brightNess = brightNess;
+          }
+          draw(ctx){
+              if(Math.random()>0.01){
+              ctx.fillRect(this.x-this.brightNess/2,this.y-this.brightNess/2,this.brightNess,this.brightNess);
+            }
+          }
+      }
+      var starList = [];
+      var sky_w = window.innerWidth;
+      var sky_h = window.innerHeight*3/5;
+      for(var i =0;i<55;i++){
+          var starItem = new Star({"x":random(3,sky_w-3),"y":random(3,sky_h-3)},random(1,3));
+          starList.push(starItem);
+      }
 
+      //主刷新程序
+      setInterval(draw,40);
+      function draw(){
+            ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+            ctx.fillStyle="#ffffff";
+            for (var i =0;i<starList.length;i++) {
+              console.log(starList[i]);
+              starList[i].draw(ctx);
+          }
+      }
+
+      function random(min,max){
+          return Math.round(Math.random()*(max-min)+min);
+      }
+   
 
     </script>
     <style type="text/css">
@@ -35,6 +70,6 @@
             width:100%;}
 
         canvas{display:block;
-            background-color: cornflowerblue;}
+            background-color: rgb(26, 31, 41);}
         </style>
 </html>
