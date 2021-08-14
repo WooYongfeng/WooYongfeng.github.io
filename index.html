@@ -1,75 +1,216 @@
 <html>
-    <meta charset="utf-8">
-    <title>烟花</title>
-    <body>
-         <canvas id="fw_canvas" ></canvas>
-    </body>
-      <script type="text/javascript">
-        var fw_canvas=document.getElementById("fw_canvas");
-        var ctx=fw_canvas.getContext("2d");
-        // ctx.font="30px Arial";
-        // ctx.fillText("Hello World",10,50);
+<meta charset="utf-8">
+<title>fireworks</title>
 
-        window.onload = ()=> {
+<body>
+    <canvas id="fw_canvas"></canvas>
+</body>
+<script type="text/javascript">
+    var fw_canvas = document.getElementById("fw_canvas");
+    var ctx = fw_canvas.getContext("2d");
+    // ctx.font="30px Arial";
+    // ctx.fillText("Hello World",10,50);
+
+    window.onload = () => {
         //页面加载后先设置一下canvas大小
-            resizeCanvas();
-      };
-        //添加窗口尺寸改变响应监听
-        window.resize= ()=>{
-            resizeCanvas();
-        }
+        resizeCanvas();
+    };
+    //添加窗口尺寸改变响应监听
+    window.resize = () => {
+        resizeCanvas();
+    }
 
-      //窗口尺寸改变响应（修改canvas大小）
-      function resizeCanvas() {
+    //窗口尺寸改变响应（修改canvas大小）
+    function resizeCanvas() {
         fw_canvas.setAttribute("width", window.innerWidth);
         fw_canvas.setAttribute("height", window.innerHeight);
         fw_canvas.setAttribute("background-color", "cornflowerblue");
-      };
-   //绘制星空
-      class Star{
-          constructor(pos,brightNess){
-              this.x = pos.x;
-              this.y = pos.y;
-              this.brightNess = brightNess;
-          }
-          draw(ctx){
-              if(Math.random()>0.01){
-              ctx.fillRect(this.x-this.brightNess/2,this.y-this.brightNess/2,this.brightNess,this.brightNess);
+    };
+    //绘制星空
+    class Star {
+        constructor(pos, brightNess) {
+            this.x = pos.x;
+            this.y = pos.y;
+            this.brightNess = brightNess;
+        }
+        draw(ctx) {
+            if (Math.random() > 0.01) {
+                ctx.fillRect(this.x - this.brightNess / 2, this.y - this.brightNess / 2, this.brightNess, this.brightNess);
             }
-          }
-      }
-      var starList = [];
-      var sky_w = window.innerWidth;
-      var sky_h = window.innerHeight*3/5;
-      for(var i =0;i<55;i++){
-          var starItem = new Star({"x":random(3,sky_w-3),"y":random(3,sky_h-3)},random(1,3));
-          starList.push(starItem);
-      }
+        }
+    }
+    var starList = [];
+    var sky_w = window.innerWidth;
+    var sky_h = window.innerHeight * 3 / 5;
+    for (var i = 0; i < 55; i++) {
+        var starItem = new Star({ "x": random(3, sky_w - 3), "y": random(3, sky_h - 3) }, random(1, 3));
+        starList.push(starItem);
+    }
+    //绘制烟花
+    class Spark {
+        constructor(pos, brightNess, lifeTime, speed_v) {
+            this.x = pos.x;
+            this.y = pos.y;
+            this.tra = [[this.x, this.y]];
+            this.brightNess = brightNess;
+            this.lifeTime = lifeTime;
+            this.speed_v = speed_v;
+        }
+        updateState() {
+            if (this.lifeTime > 0) {
+                this.x -= this.speed_v[0];
+                this.y -= this.speed_v[1];
+                if (this.speed_v[0] > 0)
+                    this.speed_v[0] -= 0.025*this.lifeTime/30;
+                this.speed_v[1] -= 9.8 * 0.025*0.5*this.lifeTime/30;
+                this.tra.push([this.x, this.y]);
 
-      //主刷新程序
-      setInterval(draw,40);
-      function draw(){
-            ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
-            ctx.fillStyle="#ffffff";
-            for (var i =0;i<starList.length;i++) {
-              console.log(starList[i]);
-              starList[i].draw(ctx);
-          }
-      }
+                this.lifeTime--;
+            }
 
-      function random(min,max){
-          return Math.round(Math.random()*(max-min)+min);
-      }
-   
+        }
+        is_alive() {
+            return this.lifeTime > 0;
+        }
+        draw(ctx) {
+            if (this.lifeTime > 0) {
+                ctx.fillRect(this.x - this.brightNess / 2, this.y - this.brightNess / 2, this.brightNess, this.brightNess);
+                if (this.tra.length > 1) {
+                    ctx.beginPath();
+                    var i = this.tra.length - 30 > 0 ? this.tra.length - 30 : 0;
+                    ctx.moveTo(this.tra[i][0], this.tra[i][1]);
+                    for (i; i < this.tra.length-1; i++) {
+                        ctx.lineTo(this.tra[i][0], this.tra[i][1])
+                    }
+                    ctx.stroke();
+                }
+                this.updateState();
+            }
+        }
+    }
 
-    </script>
-    <style type="text/css">
-        *{margin:0;padding:0;}
+    class FireWork {
+        constructor(pos, brightNess, lifeTime, color1, color2, speed_v) {
+            this.x = pos.x;
+            this.y = pos.y;
+            this.brightNess = brightNess;
+            this.lifeTime = lifeTime;
+            this.color1 = color1;
+            this.color2 = color2;
+            this.speed_v = speed_v;
+            this.state = 0;// 0 升空;//1 爆炸;//2消失
+            this.sparkList = [];
+        }
+        updateState() {
+            if (this.state == 0) {
+                this.x -= this.speed_v[0];
+                this.y -= this.speed_v[1];
+                if (this.speed_v[0] > 0)
+                    this.speed_v[0] -= 0.025;
+                this.speed_v[1] -= 9.8 * 0.025;
+                this.lifeTime--;
+                if (this.lifeTime < 0) {
+                    var n = random(35, 40);
+                    var speed = 5;
+                    var angle_interval = Math.PI * 2 / n;
+                    var spark_life = random(25, 40);
+                    for (var i = 0; i < n; i++) {
+                        var sparkItem = new Spark({ "x": this.x, "y": this.y }, random(2, 3), random(spark_life,spark_life+3), [speed * Math.cos(angle_interval * i), speed * Math.sin(angle_interval * i)]);
+                        this.sparkList.push(sparkItem);
+                    }
+                    this.state = 1;//爆炸
+                }
+            }
 
-        html,body{height:100%;
-            width:100%;}
+            if (this.state == 1) {
+                this.state = 2;
+                for (var i = 0; i < this.sparkList.length; i++) {
+                    if (this.sparkList[i].is_alive()) {
+                        this.state = 1;
+                        return;
+                    }
+                }
+            }
 
-        canvas{display:block;
-            background-color: rgb(26, 31, 41);}
-        </style>
+
+        }
+        is_alive() {
+            return this.state != 2;
+        }
+        draw(ctx) {
+            switch (this.state) {
+                case 0://升空
+                    ctx.fillStyle = this.color1;
+                    ctx.fillRect(this.x - this.brightNess / 2, this.y - this.brightNess / 2, this.brightNess, this.brightNess);
+                    this.updateState();
+                    break;
+                case 1://爆炸
+                    ctx.fillStyle = this.color2;
+                    ctx.lineWidth = 0.5;
+                    ctx.strokeStyle = this.color2;
+                    for (var i = 0; i < this.sparkList.length; i++) {
+                        this.sparkList[i].draw(ctx);
+                    }
+                    this.updateState();
+                    break;
+                case 2:
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    var fwList = [];
+
+    var floor_y = window.innerHeight;
+    //主刷新程序
+    setInterval(draw, 30);
+    function draw() {
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        ctx.fillStyle = "#ffffff";
+        for (var i = 0; i < starList.length; i++) {
+            starList[i].draw(ctx);
+        }
+        if (Math.random() > 0.95) {//点燃一颗
+            var fwItem = new FireWork({ "x": random(13, sky_w - 13), "y": random(floor_y - 45, floor_y) }, random(3, 4), random(80, 100), randomColor(), randomColor(), [random(-3, 3), random(18, 22)]);
+            fwList.push(fwItem);
+            console.log('fire!!!!');
+        }
+        var valid_fw = [];
+        for (var i = 0; i < fwList.length; i++) {
+            fwList[i].draw(ctx);
+            if (fwList[i].is_alive())
+                valid_fw.push(fwList[i]);
+        }
+        fwList = valid_fw;
+    }
+
+    function random(min, max) {
+        return Math.round(Math.random() * (max - min) + min);
+    }
+    function randomColor() {
+        return "rgb(" + random(50, 255) + "," + random(50, 255) + "," + random(50, 255) + ")";
+    }
+
+
+</script>
+<style type="text/css">
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    html,
+    body {
+        height: 100%;
+        width: 100%;
+    }
+
+    canvas {
+        display: block;
+        background-color: rgb(26, 31, 41);
+    }
+</style>
+
 </html>
